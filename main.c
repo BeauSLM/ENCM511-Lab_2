@@ -53,6 +53,7 @@ void IOinit() {
     CNEN1bits.CN1IE = 1; //Enable input change Notif on RB4
     CNEN1bits.CN0IE = 1; //Enable input change Notif on RA4
     CNEN2bits.CN30IE = 1; //Enable input change Notif on RA2
+    LATBbits.LATB8 = 0; //Turn off LED on start up.
 }
 
 void Toggle_LED() {
@@ -76,8 +77,8 @@ void Delay_ms(unsigned int time_ms) {
     
     //Interrupt Configuration for Timer 2
     IPC1bits.T2IP = 3; //Set Priority level = 3
-    IFS0bits.T2IF = 0; //Clear Timer 2 Flag
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
+    IFS0bits.T2IF = 0; //Clear Timer 2 Flag
 
     
     PR2 = 1000*32*time_ms/16; //Number of clock cycles that need to elapse
