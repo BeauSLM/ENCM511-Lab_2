@@ -45,7 +45,7 @@ void IOinit() {
     CNPU1bits.CN0PUE = 1; //Enables Pull up resistor on RA4/ CN0
     CNPU1bits.CN1PUE = 1; //Enables Pull resistor on RB4 / CN1
 	
-    //AD1PCFG = 0xFFFF; // Turn all analog pins as digital
+    AD1PCFG = 0xFFFF; // Turn all analog pins as digital
 	
     IPC4bits.CNIP = 7; //sets priority for Input Change Notification
 	IFS1bits.CNIF = 0; //Clear the CNI flag
@@ -92,14 +92,14 @@ void IOcheck() {
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             //Just button on RA4 GPIO is pressed - shorted
-            Toggle_LED();
+            //Toggle_LED();
             //Delay_ms(1000);
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
-            Toggle_LED();
+            //Toggle_LED();
             //Delay_ms(2000);
             //Just button on RA4 GPIO is pressed - shorted
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
-            Toggle_LED();
+            //Toggle_LED();
             //Delay_ms(3000);
             //Just button on RB4 GPIO is pressed - shorted
         } else { 
