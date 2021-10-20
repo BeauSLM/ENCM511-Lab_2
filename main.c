@@ -55,7 +55,13 @@ void IOinit() {
     CNEN2bits.CN30IE = 1; //Enable input change Notif on RA2
 }
 
-
+void Toggle_LED() {
+    if(PORTBbits.RB8 == 0) {
+        LATBbits.LATB8 = 1;
+    } else {
+        LATBbits.LATB8 = 0;
+    }
+}
 //clkval = 8 for 8MHz; 
 //clkval = 500 for 500kHz; 
 //clkval = 32 for 32kHz; 
@@ -85,24 +91,20 @@ void IOcheck() {
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             //Just button on RA4 GPIO is pressed - shorted
+            Toggle_LED();
             Delay_ms(1000);
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
+            Toggle_LED();
             Delay_ms(2000);
             //Just button on RA4 GPIO is pressed - shorted
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
+            Toggle_LED();
             Delay_ms(3000);
             //Just button on RB4 GPIO is pressed - shorted
         } else { 
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
         }
         CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
-    }
-}
-void Toggle_LED() {
-    if(PORTBbits.RB8 == 0) {
-        LATBbits.LATB8 = 1;
-    } else {
-        LATBbits.LATB8 = 0;
     }
 }
 
@@ -125,7 +127,7 @@ void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
 
 int main(void) {
     IOinit();
-	CLKinit();
+	//CLKinit();
     while(1) {
         
     }
