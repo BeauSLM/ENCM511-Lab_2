@@ -25,7 +25,7 @@ void CLKinit()
      __builtin_write_OSCCONH(0x55); //writes to upper half of OSCCON
      __builtin_write_OSCCONL(0x01); //writes to lower half of OSCCON
      OSCCONbits.OSWEN=1; //indicates a clock switch
-     while(OSCCONbits.OSWEN==1) {} //waits until the bit switches back
+     while(OSCCONbits.COSC != 0b000) {} //waits until the bit switches back
 	 //indicates a successful clock switch
      SRbits.IPL = 0;  //Enable interrupts after switch
 }
