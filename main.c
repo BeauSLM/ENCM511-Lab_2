@@ -45,11 +45,14 @@ void IOinit() {
     CNPU1bits.CN0PUE = 1; //Enables Pull up resistor on RA4/ CN0
     CNPU1bits.CN1PUE = 1; //Enables Pull resistor on RB4 / CN1
 	
-    AD1PCFG = 0xFFFF; // Turn all analog pins as digital
+    //AD1PCFG = 0xFFFF; // Turn all analog pins as digital
 	
-    IPC4bits.CNIP = 4; //sets priority for Input Change Notification
+    IPC4bits.CNIP = 7; //sets priority for Input Change Notification
 	IFS1bits.CNIF = 0; //Clear the CNI flag
     IEC1bits.CNIE = 1; //Input Change Notification Interrupts Enabled
+    CNEN1bits.CN1IE = 1; //Enable input change Notif on RB4
+    CNEN1bits.CN0IE = 1; //Enable input change Notif on RA4
+    CNEN2bits.CN30IE = 1; //Enable input change Notif on RA2
 }
 
 
@@ -103,14 +106,15 @@ void Toggle_LED() {
     }
 }
 
- void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void)
+ void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
  {
     IFS1bits.CNIF = 0; //Clear interrupt Register Flag
     CNFlag = 1; // Set our CN Global Flag to True/1
     IOcheck();
  }
 
-void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
+ 
+void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
     IFS0bits.T2IF = 0; //Clear timer 2 interrupt flag
     T2CONbits.TON = 0; //Stop timer
     Toggle_LED();
