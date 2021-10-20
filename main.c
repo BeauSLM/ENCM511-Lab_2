@@ -58,7 +58,7 @@ int CNFlag = 0;
 //int TMR2Flag = 0;
 
 //sets the clock to 500kHz
-void CLKinit()  
+/*void CLKinit()  
 {
      SRbits.IPL = 7;  //Disable interrupts before switch
      CLKDIVbits.RCDIV = 0;  // CLK division = 0
@@ -69,7 +69,7 @@ void CLKinit()
      while(OSCCONbits.COSC != 0b000) {} //waits until the bit switches back
 	 //indicates a successful clock switch
      SRbits.IPL = 0;  //Enable interrupts after switch
-}
+}*/
 
 /*
  * Function void IOinit() sets up our input and output pin
@@ -113,16 +113,17 @@ void Delay_ms(unsigned int time_ms) {
     T2CONbits.TCS = 0; // Set internal clock usage
     
     //Prescaler settings of T2CON register
-    T2CONbits.TCKPS0 = 0; //
+    T2CONbits.TCKPS0 = 1; //
     T2CONbits.TCKPS1 = 1; // These two lines set prescaling to 8x
     
     //Interrupt Configuration for Timer 2
-    IPC1bits.T2IP = 3; //Set Priority level = 3
+    //IPC1bits.T2IP = 3; //Set Priority level = 3
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
     IFS0bits.T2IF = 0; //Clear Timer 2 Flag
 
+
     
-    PR2 = 1000*32*time_ms/16; //Number of clock cycles that need to elapse
+    PR2 = (time_ms / 1000) * 15625; //Number of clock cycles that need to elapse
     T2CONbits.TON = 1; //Timer 2 Starts here
     return;
     
@@ -133,15 +134,15 @@ void IOcheck() {
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             //Just button on RA4 GPIO is pressed - shorted
-            //Toggle_LED();
-            //Delay_ms(1000);
+            Toggle_LED();
+            Delay_ms(1000);
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
-            //Toggle_LED();
-            //Delay_ms(2000);
+            Toggle_LED();
+            Delay_ms(2000);
             //Just button on RA4 GPIO is pressed - shorted
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
-            //Toggle_LED();
-            //Delay_ms(3000);
+            Toggle_LED();
+            Delay_ms(3000);
             //Just button on RB4 GPIO is pressed - shorted
         } else { 
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
@@ -169,7 +170,6 @@ void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
 
 int main(void) {
     IOinit();
-	//CLKinit();
     while(1) {
         
     }
