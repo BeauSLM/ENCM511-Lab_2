@@ -90,14 +90,13 @@ void Delay_ms(unsigned int time_ms) {
 
     //Prescaler settings of T2CON register
     T2CONbits.TCKPS0 = 1; //
-    T2CONbits.TCKPS1 = 1; // These two lines set prescaling to 8x
+    T2CONbits.TCKPS1 = 1; // These two lines set prescaling to 256x
 
     //Interrupt Configuration for Timer 2
-    //IPC1bits.T2IP = 3; //Set Priority level = 3
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
     IFS0bits.T2IF = 0; //Clear Timer 2 Flag
 
-    PR2 = ((time_ms / 1000) * 15625)/4; //Number of clock cycles that need to elapse
+    PR2 = ((time_ms / 1000) * 15625)/4; //Sets number of clock cycles needed
     T2CONbits.TON = 1; //Timer 2 Starts here
     TMR2Flag = 1; //Timer 2 Global variable is enabled
     Idle(); //Puts the processor in idle mode while timer goes down
@@ -113,22 +112,24 @@ void LED_Cycle(unsigned int time_ms) {
 
 void IOcheck() {
     if(CNFlag == 1 || TMR2Flag == 1) {
+        //no buttons pressed
         if(PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
             Idle(); //puts processor in idle mode
+        //first button pressed (RA2)
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
-            //Just button on RA2 GPIO is pressed - shorte
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LED_Cycle(1000);
+        //second button pressed (RA4)
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LED_Cycle(2000);
-            //Just button on RA4 GPIO is pressed - shorted
+        //third button pressed (RB4)
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LED_Cycle(3000);
-            //Just button on RB4 GPIO is pressed - shorted
+        //multiple buttons pressed
         } else {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
