@@ -52,7 +52,7 @@
 #pragma config DSBOREN = ON       // Deep Sleep Zero-Power BOR Enable bit (Deep Sleep BOR enabled in Deep Sleep)
 #pragma config DSWDTEN = ON       // Deep Sleep Watchdog Timer Enable bit (DSWDT enabled)
 
-
+void IOcheck();
 //Global Variables
 int CNFlag = 0;
 int TMR2Flag = 0;
@@ -134,6 +134,7 @@ void IOcheck() {
         if(PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
+            Idle();
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             //Just button on RA2 GPIO is pressed - shorte
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
@@ -149,13 +150,15 @@ void IOcheck() {
         } else {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
+            Idle();
         }
     }
 }
 
  void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
  {
-    TMR2Flag = 0;
+    TMR2Flag = 0; //Reset the timer Flag to 
+                  //indicate an input interrupted the LED Flashing
     IFS1bits.CNIF = 0; //Clear interrupt Register Flag
     CNFlag = 1; // Set our CN Global Flag to True/1
  }
