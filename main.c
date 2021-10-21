@@ -55,7 +55,7 @@
 
 //Global Variables
 int CNFlag = 0;
-//int TMR2Flag = 0;
+int TMR2Flag = 0;
 
 //sets the clock to 500kHz
 /*void CLKinit()  
@@ -97,13 +97,7 @@ void IOinit() {
     LATBbits.LATB8 = 0; //Turn off LED on start up.
 }
 
-void Toggle_LED() {
-    if(PORTBbits.RB8 == 0) {
-        LATBbits.LATB8 = 1;
-    } else {
-        LATBbits.LATB8 = 0;
-    }
-}
+
 //clkval = 8 for 8MHz; 
 //clkval = 500 for 500kHz; 
 //clkval = 32 for 32kHz; 
@@ -111,58 +105,65 @@ void Delay_ms(unsigned int time_ms) {
     //Configuring T2CON register
     T2CONbits.T32 = 0; //Operate as 16 bit timer
     T2CONbits.TCS = 0; // Set internal clock usage
-    
+
     //Prescaler settings of T2CON register
     T2CONbits.TCKPS0 = 1; //
     T2CONbits.TCKPS1 = 1; // These two lines set prescaling to 8x
-    
+
     //Interrupt Configuration for Timer 2
     //IPC1bits.T2IP = 3; //Set Priority level = 3
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
     IFS0bits.T2IF = 0; //Clear Timer 2 Flag
 
 
-    
-    PR2 = (time_ms / 1000) * 15625; //Number of clock cycles that need to elapse
+
+    PR2 = ((time_ms / 1000) * 15625)/4; //Number of clock cycles that need to elapse
     T2CONbits.TON = 1; //Timer 2 Starts here
+    TMR2Flag = 1; //Timer 2 Global variable is enabled
+    Idle();
     return;
-    
+}
+void LED_Cycle(unsigned int time_ms) {
+    LATBbits.LATB8 = 1;
+    Delay_ms(time_ms);
+    LATBbits.LATB8 = 0;
+    Delay_ms(time_ms);
 }
 void IOcheck() {
-    if(CNFlag == 1) {
+    if(CNFlag == 1 || TMR2Flag == 1) {
         if(PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1) {
+            CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
-            //Just button on RA4 GPIO is pressed - shorted
-            Toggle_LED();
-            Delay_ms(1000);
+            //Just button on RA2 GPIO is pressed - shorte
+            CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
+            LED_Cycle(1000);
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
-            Toggle_LED();
-            Delay_ms(2000);
+            CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
+            LED_Cycle(2000);
             //Just button on RA4 GPIO is pressed - shorted
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
-            Toggle_LED();
-            Delay_ms(3000);
+            CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
+            LED_Cycle(3000);
             //Just button on RB4 GPIO is pressed - shorted
-        } else { 
+        } else {
+            CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
         }
-        CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
     }
 }
 
  void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
  {
+    TMR2Flag = 0;
     IFS1bits.CNIF = 0; //Clear interrupt Register Flag
     CNFlag = 1; // Set our CN Global Flag to True/1
-    IOcheck();
  }
 
  
 void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
     IFS0bits.T2IF = 0; //Clear timer 2 interrupt flag
     T2CONbits.TON = 0; //Stop timer
-    Toggle_LED();
     TMR2 = 0; //Reset the TMR2 register after the interrupt occurs.
     //TMR2Flag = 1; //Timer complete
 } 
@@ -171,7 +172,7 @@ void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
 int main(void) {
     IOinit();
     while(1) {
-        
+        IOcheck();
     }
     return 0;
 }
