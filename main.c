@@ -7,6 +7,7 @@
  * Completed On :
  * Submitted on :
  */
+
 #include "xc.h"
 #include <p24F16KA101.h>
 
@@ -54,22 +55,8 @@
 
 void IOcheck();
 //Global Variables
-int CNFlag = 0;
-int TMR2Flag = 0;
-
-//sets the clock to 500kHz
-/*void CLKinit()  
-{
-     SRbits.IPL = 7;  //Disable interrupts before switch
-     CLKDIVbits.RCDIV = 0;  // CLK division = 0
-	 //prepares a 32kHz clock switch
-     __builtin_write_OSCCONH(0x55); //writes to upper half of OSCCON
-     __builtin_write_OSCCONL(0x01); //writes to lower half of OSCCON
-     OSCCONbits.OSWEN=1; //indicates a clock switch
-     while(OSCCONbits.COSC != 0b000) {} //waits until the bit switches back
-	 //indicates a successful clock switch
-     SRbits.IPL = 0;  //Enable interrupts after switch
-}*/
+int CNFlag = 0; //Input interrupt flag
+int TMR2Flag = 0; //Timer 2 flag
 
 /*
  * Function void IOinit() sets up our input and output pin
@@ -94,13 +81,8 @@ void IOinit() {
     CNEN1bits.CN1IE = 1; //Enable input change Notif on RB4
     CNEN1bits.CN0IE = 1; //Enable input change Notif on RA4
     CNEN2bits.CN30IE = 1; //Enable input change Notif on RA2
-    LATBbits.LATB8 = 0; //Turn off LED on start up.
 }
 
-
-//clkval = 8 for 8MHz; 
-//clkval = 500 for 500kHz; 
-//clkval = 32 for 32kHz; 
 void Delay_ms(unsigned int time_ms) {
     //Configuring T2CON register
     T2CONbits.T32 = 0; //Operate as 16 bit timer
@@ -115,26 +97,26 @@ void Delay_ms(unsigned int time_ms) {
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
     IFS0bits.T2IF = 0; //Clear Timer 2 Flag
 
-
-
     PR2 = ((time_ms / 1000) * 15625)/4; //Number of clock cycles that need to elapse
     T2CONbits.TON = 1; //Timer 2 Starts here
     TMR2Flag = 1; //Timer 2 Global variable is enabled
-    Idle();
+    Idle(); //Puts the processor in idle mode while timer goes down
     return;
 }
+
 void LED_Cycle(unsigned int time_ms) {
-    LATBbits.LATB8 = 1;
-    Delay_ms(time_ms);
-    LATBbits.LATB8 = 0;
-    Delay_ms(time_ms);
+    LATBbits.LATB8 = 1; //turns light on
+    Delay_ms(time_ms); //starts a timer that delays for time_ms
+    LATBbits.LATB8 = 0; //turns light off
+    Delay_ms(time_ms); //starts a timer that delays for time_ms
 }
+
 void IOcheck() {
     if(CNFlag == 1 || TMR2Flag == 1) {
         if(PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
-            Idle();
+            Idle(); //puts processor in idle mode
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             //Just button on RA2 GPIO is pressed - shorte
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
@@ -150,15 +132,15 @@ void IOcheck() {
         } else {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
-            Idle();
+            Idle(); //puts processor in idle mode
         }
     }
 }
 
  void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
  {
-    TMR2Flag = 0; //Reset the timer Flag to 
-                  //indicate an input interrupted the LED Flashing
+    TMR2Flag = 0; //Reset the timer Flag to indicate an input interrupted 
+                  //the LED Flashing
     IFS1bits.CNIF = 0; //Clear interrupt Register Flag
     CNFlag = 1; // Set our CN Global Flag to True/1
  }
