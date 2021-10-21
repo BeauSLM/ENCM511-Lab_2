@@ -54,6 +54,7 @@
 #pragma config DSWDTEN = ON       // Deep Sleep Watchdog Timer Enable bit (DSWDT enabled)
 
 void IOcheck();
+
 //Global Variables
 int CNFlag = 0; //Input interrupt flag
 int TMR2Flag = 0; //Timer 2 flag
@@ -69,9 +70,9 @@ void IOinit() {
     TRISAbits.TRISA4 = 1; //SET GPIO RA4 as a digital input.
     TRISBbits.TRISB4 = 1; //SET GPIO RB4 as a digital input.
 	
-    CNPU2bits.CN30PUE = 1; //Enables Pull up resistor on RA2/ CN30
-    CNPU1bits.CN0PUE = 1; //Enables Pull up resistor on RA4/ CN0
-    CNPU1bits.CN1PUE = 1; //Enables Pull resistor on RB4 / CN1
+    CNPU2bits.CN30PUE = 1; //Enables Pull up resistor on RA2 / CN30
+    CNPU1bits.CN0PUE = 1; //Enables Pull up resistor on RA4 / CN0
+    CNPU1bits.CN1PUE = 1; //Enables Pull up resistor on RB4 / CN1
 	
     AD1PCFG = 0xFFFF; // Turn all analog pins as digital
 	
@@ -120,15 +121,15 @@ void IOcheck() {
         //first button pressed (RA2)
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
-            LED_Cycle(1000);
+            LED_Cycle(1000); //1s cycle
         //second button pressed (RA4)
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 0 && PORTBbits.RB4 == 1)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
-            LED_Cycle(2000);
+            LED_Cycle(2000); //2s cycle
         //third button pressed (RB4)
         } else if((PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 0)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
-            LED_Cycle(3000);
+            LED_Cycle(3000); //3s cycle
         //multiple buttons pressed
         } else {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
@@ -136,6 +137,8 @@ void IOcheck() {
             Idle(); //puts processor in idle mode
         }
     }
+    else
+        Idle();
 }
 
  void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
@@ -151,7 +154,6 @@ void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
     IFS0bits.T2IF = 0; //Clear timer 2 interrupt flag
     T2CONbits.TON = 0; //Stop timer
     TMR2 = 0; //Reset the TMR2 register after the interrupt occurs.
-    //TMR2Flag = 1; //Timer complete
 } 
 
 
