@@ -76,7 +76,7 @@ void IOinit() {
 	
     AD1PCFG = 0xFFFF; // Turn all analog pins as digital
 	
-    IPC4bits.CNIP = 7; //sets priority for Input Change Notification
+    IPC4bits.CNIP = 4; //sets priority for Input Change Notification
 	IFS1bits.CNIF = 0; //Clear the CNI flag
     IEC1bits.CNIE = 1; //Input Change Notification Interrupts Enabled
     CNEN1bits.CN1IE = 1; //Enable input change Notif on RB4
@@ -88,18 +88,21 @@ void Delay_ms(unsigned int time_ms) {
     //Configuring T2CON register
     T2CONbits.T32 = 0; //Operate as 16 bit timer
     T2CONbits.TCS = 0; // Set internal clock usage
+    T2CONbits.TSIDL = 0; //Continue timer operation in idle mode
 
     //Prescaler settings of T2CON register
     T2CONbits.TCKPS0 = 1; //
     T2CONbits.TCKPS1 = 1; // These two lines set prescaling to 256x
-
+    
+    TMR2 = 0; //Clears TMR2
+    
     //Interrupt Configuration for Timer 2
     IEC0bits.T2IE = 1; //Timer 2 interrupt enabled
     IFS0bits.T2IF = 0; //Clear Timer 2 Flag
+    IPC1bits.T2IP = 3; //sets priority for timer
 
-    PR2 = ((time_ms / 1000) * 15625)/4; //Sets number of clock cycles needed
+    PR2 = ((time_ms / 1000) * 15625)/2; //Sets number of clock cycles needed
     T2CONbits.TON = 1; //Timer 2 Starts here
-    TMR2Flag = 1; //Timer 2 Global variable is enabled
     Idle(); //Puts the processor in idle mode while timer goes down
     return;
 }
@@ -117,7 +120,6 @@ void IOcheck() {
         if(PORTAbits.RA2 == 1 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 0; //turn LED off in case no button is pressed
-            Idle(); //puts processor in idle mode
         //first button pressed (RA2)
         } else if((PORTAbits.RA2 == 0 && PORTAbits.RA4 == 1 && PORTBbits.RB4 == 1)) {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
@@ -134,11 +136,8 @@ void IOcheck() {
         } else {
             CNFlag = 0; // Set our CN Global Flag to False after we handle the interrupt
             LATBbits.LATB8 = 1; //turn LED on if multiple buttons are pressed
-            Idle(); //puts processor in idle mode
         }
     }
-    else
-        Idle();
 }
 
  void __attribute__((interrupt, no_auto_psv))_CNInterrupt(void)
@@ -147,20 +146,26 @@ void IOcheck() {
                   //the LED Flashing
     IFS1bits.CNIF = 0; //Clear interrupt Register Flag
     CNFlag = 1; // Set our CN Global Flag to True/1
+    
+    T2CONbits.TON = 0; //Stop timer
+    TMR2 = 0;
+    IOcheck();
  }
 
  
 void __attribute__((interrupt, no_auto_psv))_T2Interrupt(void) {
     IFS0bits.T2IF = 0; //Clear timer 2 interrupt flag
     T2CONbits.TON = 0; //Stop timer
-    TMR2 = 0; //Reset the TMR2 register after the interrupt occurs.
+    TMR2 = 0; //Clears Timer
+    TMR2Flag = 1; //Timer 2 Global variable is enabled
+    IOcheck();
 } 
 
 
 int main(void) {
     IOinit();
     while(1) {
-        IOcheck();
+        Idle();
     }
     return 0;
 }
